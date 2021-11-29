@@ -2,6 +2,9 @@ const imageContainer = document.getElementById('image-container');
 const loader = document.getElementById('loader');
 
 let photosArray = [];
+let images = 0;
+let totalImages = 0;
+let ready = false;
 
 const COUNT = 10;
 const API_KEY = `9EDCdldQhuHaW-1e2jQApJvOHfFBtTi-sD1tJ8wqC_4`;
@@ -15,9 +18,22 @@ function setAttributes(element, attributes) {
   }
 }
 
+//on image load
+function imageLoaded() {
+  images++;
+  // console.log('image loaded');
+  if (images === totalImages) {
+    ready = true;
+    console.log('ready =', ready);
+    loader.hidden = true;
+  }
+}
+
 //display photos
 function displayPhotos() {
-  console.log('photos array length: ', photosArray.length);
+  images = 0;
+  totalImages = photosArray.length;
+  // console.log('total images =', totalImages);
 
   photosArray.forEach((photo) => {
     const item = document.createElement('a');
@@ -35,6 +51,8 @@ function displayPhotos() {
       title: photo.alt_description,
     });
 
+    img.addEventListener('load', imageLoaded);
+
     item.appendChild(img);
     imageContainer.appendChild(item);
   });
@@ -45,12 +63,23 @@ async function getPhotos() {
   try {
     const response = await fetch(apiURL);
     photosArray = await response.json();
-    console.log('photosArray: ', photosArray);
     displayPhotos();
   } catch (error) {
     //catch error here
   }
 }
+
+// check to see if scrolling near bottom of page, load more photos
+window.addEventListener('scroll', () => {
+  const scrollPlusInnerHeight = this.scrollY + this.innerHeight;
+  const offsetHeight = this.document.body.offsetHeight;
+  if (offsetHeight - scrollPlusInnerHeight < 1000 && ready) {
+    // if (offsetHeight - scrollPlusInnerHeight < 1000) {
+    ready = false;
+    getPhotos();
+    // console.log('get photos');
+  }
+});
 
 //on load
 getPhotos();
